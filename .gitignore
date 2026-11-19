@@ -1,0 +1,19 @@
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+# Screenshots / images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.webp
+
+# Documents
+*.pdf
+
+# Data files
+*.csv
+*.xls
+*.xlsx
+*.xlsm
+*.xlsb

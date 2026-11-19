@@ -1,0 +1,139 @@
+table orders_info
+	lineageTag: 856e4825-9b33-4220-a3b2-c3a8847c8d8d
+
+	column orderNumber
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: bb0d115c-2c0d-405f-929b-8dd4b497ff53
+		summarizeBy: none
+		sourceColumn: orderNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column orderDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2801919a-58f2-4131-a58e-b708c14c08a8
+		summarizeBy: none
+		sourceColumn: orderDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column shippedDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 87388756-247a-4dd6-a908-35dd2ba0d95d
+		summarizeBy: none
+		sourceColumn: shippedDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column requiredDate
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f7f72d42-93af-41a2-a22b-bcdd2a06f0e6
+		summarizeBy: none
+		sourceColumn: requiredDate
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: d3e9a8da-661e-468a-9cf6-9279764374b2
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column customerName
+		dataType: string
+		isHidden
+		lineageTag: bfed6043-a13c-43d0-8ccb-344e9573f192
+		summarizeBy: none
+		sourceColumn: customerName
+
+		annotation SummarizationSetBy = Automatic
+
+	column country
+		dataType: string
+		isHidden
+		lineageTag: 2275873c-6ca0-4fb6-95ba-aaff158a36ab
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column salesRepEmployeeNumber
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 310ba38d-461a-4859-8eee-e5b6d1698730
+		summarizeBy: none
+		sourceColumn: salesRepEmployeeNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column salesRep
+		dataType: string
+		lineageTag: 2aa979d3-fbb3-4948-a2eb-ba1e9e5d3e55
+		summarizeBy: none
+		sourceColumn: salesRep
+
+		annotation SummarizationSetBy = Automatic
+
+	column totalSales
+		dataType: double
+		isHidden
+		lineageTag: cdb85fb2-9651-499d-af79-48d2d8db2638
+		summarizeBy: none
+		sourceColumn: totalSales
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column totalCost
+		dataType: double
+		isHidden
+		lineageTag: 2cd31b77-002c-41c1-867b-abff6e082017
+		summarizeBy: none
+		sourceColumn: totalCost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column totalProfit
+		dataType: double
+		isHidden
+		lineageTag: d0a10bf2-4d36-4dea-9811-dfa19a43b6ab
+		summarizeBy: none
+		sourceColumn: totalProfit
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column customerNumber
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 88d9b03e-5dac-40b9-b8ab-3fd8408d0a10
+		summarizeBy: none
+		sourceColumn: customerNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	partition orders_info = m
+		mode: import
+		source =
+				let
+				    Source = MySQL.Database("3.252.97.149", "classicmodels", [ReturnSingleDatabase=true, Query="WITH order_summary AS (#(lf)    SELECT#(lf)        o.orderNumber,#(lf)        o.orderDate,#(lf)        o.shippedDate,#(lf)        o.requiredDate,#(lf)        o.status,#(lf)        o.customerNumber,#(lf)        SUM(od.quantityOrdered * od.priceEach) AS totalSales,#(lf)        SUM(od.quantityOrdered * p.buyPrice) AS totalCost,#(lf)        SUM((od.quantityOrdered * od.priceEach) - (od.quantityOrdered * p.buyPrice)) AS totalProfit#(lf)    FROM#(lf)        orders o#(lf)        INNER JOIN orderdetails od ON o.orderNumber = od.orderNumber#(lf)        INNER JOIN products p ON od.productCode = p.productCode#(lf)    GROUP BY#(lf)        o.orderNumber, o.orderDate, o.shippedDate, o.requiredDate, o.status, o.customerNumber#(lf))#(lf)SELECT#(lf)    os.orderNumber,#(lf)    os.orderDate,#(lf)    os.shippedDate,#(lf)    os.requiredDate,#(lf)    os.status,#(lf)    os.customerNumber,#(lf)    c.customerName,#(lf)    c.country,#(lf)    e.employeeNumber AS salesRepEmployeeNumber,#(lf)    CONCAT(e.firstName, ' ', e.lastName) AS salesRep,#(lf)    os.totalSales,#(lf)    os.totalCost,#(lf)    os.totalProfit#(lf)FROM#(lf)    order_summary os#(lf)    INNER JOIN customers c ON os.customerNumber = c.customerNumber#(lf)    LEFT JOIN employees e ON c.salesRepEmployeeNumber = e.employeeNumber;#(lf)"])
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

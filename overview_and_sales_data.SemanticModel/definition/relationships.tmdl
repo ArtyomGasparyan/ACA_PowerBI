@@ -1,0 +1,26 @@
+relationship abcd3419-b6c0-4e7c-866e-415c9c2d69e4
+	fromColumn: orders_info.orderDate
+	toColumn: 'Dim Date'.Date
+
+relationship 55ca9b22-1780-4330-b8e5-17d1eb38a37e
+	isActive: false
+	fromColumn: orders_info.shippedDate
+	toColumn: 'Dim Date'.Date
+
+relationship e73f4cd7-c844-453c-902c-cca873284675
+	isActive: false
+	fromColumn: orders_info.requiredDate
+	toColumn: 'Dim Date'.Date
+
+relationship 2c0dd621-9cfd-42de-bd8f-4a8a8f853e3d
+	fromColumn: 'classicmodels payments'.paymentDate
+	toColumn: 'Dim Date'.Date
+
+relationship AutoDetected_6e657c34-e1e9-4582-ad8b-6c2a15063e15
+	fromColumn: orders_info.customerNumber
+	toColumn: 'classicmodels customers'.customerNumber
+
+relationship AutoDetected_6755b0df-d169-4cf8-96e5-c6949f24f742
+	fromColumn: 'classicmodels payments'.customerNumber
+	toColumn: 'classicmodels customers'.customerNumber
+

@@ -1,0 +1,165 @@
+table 'classicmodels customers'
+	lineageTag: 2b0e2cf0-22e9-41cd-b467-f944fef429e8
+
+	column customerNumber
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: affcbbee-db91-4b33-9a84-699fbd8c40e9
+		summarizeBy: none
+		sourceColumn: customerNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column customerName
+		dataType: string
+		lineageTag: 5ed4fb52-43cb-4258-a643-3c6d351ba76d
+		summarizeBy: none
+		sourceColumn: customerName
+
+		annotation SummarizationSetBy = Automatic
+
+	column contactLastName
+		dataType: string
+		isHidden
+		lineageTag: 5f12dbcb-ca7e-4f66-9904-d94aa9c2d939
+		summarizeBy: none
+		sourceColumn: contactLastName
+
+		annotation SummarizationSetBy = Automatic
+
+	column contactFirstName
+		dataType: string
+		isHidden
+		lineageTag: a5ae65c0-2a53-4552-8619-099aa8ae4ee9
+		summarizeBy: none
+		sourceColumn: contactFirstName
+
+		annotation SummarizationSetBy = Automatic
+
+	column phone
+		dataType: string
+		isHidden
+		lineageTag: 855b7994-7711-4e3d-9648-61c1a45639a7
+		summarizeBy: none
+		sourceColumn: phone
+
+		annotation SummarizationSetBy = Automatic
+
+	column addressLine1
+		dataType: string
+		isHidden
+		lineageTag: caa7fd23-aa50-4ffe-9a8c-1d7e4e86b8b4
+		summarizeBy: none
+		sourceColumn: addressLine1
+
+		annotation SummarizationSetBy = Automatic
+
+	column addressLine2
+		dataType: string
+		isHidden
+		lineageTag: 690ece46-6455-4dcf-a94e-74df80e8f019
+		summarizeBy: none
+		sourceColumn: addressLine2
+
+		annotation SummarizationSetBy = Automatic
+
+	column city
+		dataType: string
+		lineageTag: 91b537bf-8c7d-46a7-8170-56167c5dcf22
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: city
+
+		annotation SummarizationSetBy = Automatic
+
+	column state
+		dataType: string
+		lineageTag: 09cd18e8-4845-4c75-9ffe-e17942c505b2
+		dataCategory: StateOrProvince
+		summarizeBy: none
+		sourceColumn: state
+
+		annotation SummarizationSetBy = Automatic
+
+	column postalCode
+		dataType: string
+		isHidden
+		lineageTag: b3c8f95f-e558-4da5-ba7a-646c84e3121e
+		dataCategory: PostalCode
+		summarizeBy: none
+		sourceColumn: postalCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column country
+		dataType: string
+		lineageTag: 5c74d9dc-e82f-4617-acea-96039802faa9
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column salesRepEmployeeNumber
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c98f7062-445d-4dcb-ab74-9c04c7ff4901
+		summarizeBy: none
+		sourceColumn: salesRepEmployeeNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column creditLimit
+		dataType: double
+		isHidden
+		lineageTag: 59cb6ab4-5368-49bc-8141-6b7c239f196f
+		summarizeBy: none
+		sourceColumn: creditLimit
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Static (all-time) balance segment per customer, used for slicers and legends.
+	column 'Balance Segment' =
+			VAR Bal = [Outstanding Balance]
+			RETURN SWITCH ( TRUE (), Bal > 0, "In Debt", Bal < 0, "Deposit", "Settled" )
+		dataType: string
+		lineageTag: 7a2d1c00-0000-4000-8000-000000000001
+		summarizeBy: none
+
+	/// Static (all-time) credit utilization band per customer, used for slicers and charts.
+	column 'Utilization Segment' =
+			VAR Debt = MAX ( [Outstanding Balance], 0 )
+			VAR Limit = [creditLimit]
+			VAR U = DIVIDE ( Debt, Limit )
+			RETURN SWITCH ( TRUE (), ISBLANK ( U ), "No Limit", U >= 1, "Over Limit", U >= 0.8, "High (80-100%)", U >= 0.5, "Medium (50-80%)", "Low (<50%)" )
+		dataType: string
+		lineageTag: 7a2d1c00-0000-4000-8000-000000000002
+		summarizeBy: none
+		sortByColumn: 'Utilization Segment Order'
+
+	column 'Utilization Segment Order' =
+			VAR Debt = MAX ( [Outstanding Balance], 0 )
+			VAR U = DIVIDE ( Debt, [creditLimit] )
+			RETURN SWITCH ( TRUE (), ISBLANK ( U ), 5, U >= 1, 4, U >= 0.8, 3, U >= 0.5, 2, 1 )
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7a2d1c00-0000-4000-8000-000000000003
+		summarizeBy: none
+
+	partition 'classicmodels customers' = m
+		mode: import
+		source =
+				let
+				    Source = MySQL.Database("3.252.97.149", "classicmodels", [ReturnSingleDatabase=true]),
+				    classicmodels_customers = Source{[Schema="classicmodels",Item="customers"]}[Data]
+				in
+				    classicmodels_customers
+
+	annotation PBI_ResultType = Table
+

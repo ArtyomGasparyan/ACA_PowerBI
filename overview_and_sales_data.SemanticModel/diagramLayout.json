@@ -1,0 +1,87 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 87,
+            "y": 124
+          },
+          "nodeIndex": "orders_info",
+          "nodeLineageTag": "856e4825-9b33-4220-a3b2-c3a8847c8d8d",
+          "size": {
+            "height": 464,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 807,
+            "y": 113
+          },
+          "nodeIndex": "classicmodels payments",
+          "nodeLineageTag": "86f8e746-0119-45ff-8158-06dca81ba78c",
+          "size": {
+            "height": 342,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 466,
+            "y": 109.5
+          },
+          "nodeIndex": "classicmodels customers",
+          "nodeLineageTag": "2b0e2cf0-22e9-41cd-b467-f944fef429e8",
+          "size": {
+            "height": 484,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1004,
+            "y": 128.5
+          },
+          "nodeIndex": "_Measures",
+          "nodeLineageTag": "3c6f0a10-1111-4000-8000-00000000a001",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1288,
+            "y": 142.5
+          },
+          "nodeIndex": "Dim Date",
+          "nodeLineageTag": "5d1c1b0e-7a41-4a6e-9a3a-0c1f2e9b1001",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

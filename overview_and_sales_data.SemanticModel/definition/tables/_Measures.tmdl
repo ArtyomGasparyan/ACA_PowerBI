@@ -1,0 +1,584 @@
+table _Measures
+	lineageTag: 3c6f0a10-1111-4000-8000-00000000a001
+
+	/// Sales value of all orders including Cancelled. Reconciliation only.
+	measure 'Gross Order Value' = SUM ( orders_info[totalSales] )
+		formatString: $#,0
+		displayFolder: 1 Sales
+		lineageTag: a7b45e52-6625-4df7-a97a-c3df9f8a6d33
+
+	/// Sales value of valid (non-cancelled) orders.
+	measure Revenue = CALCULATE ( SUM ( orders_info[totalSales] ), orders_info[status] <> "Cancelled" )
+		formatString: $#,0
+		displayFolder: 1 Sales
+		lineageTag: 8b95f20b-b90b-430f-b185-e21d28be6e7a
+
+	/// Count of valid (non-cancelled) orders.
+	measure Orders = CALCULATE ( DISTINCTCOUNT ( orders_info[orderNumber] ), orders_info[status] <> "Cancelled" )
+		formatString: #,0
+		displayFolder: 1 Sales
+		lineageTag: d94e80bc-e1cc-4ca2-9a98-5abae534a2b2
+
+	/// Revenue divided by number of valid orders.
+	measure 'Average Order Value' = DIVIDE ( [Revenue], [Orders] )
+		formatString: $#,0
+		displayFolder: 1 Sales
+		lineageTag: f8c38ebf-4b97-410e-a172-5950ab527c98
+
+	/// Sales value of cancelled orders.
+	measure 'Cancelled Value' = CALCULATE ( SUM ( orders_info[totalSales] ), orders_info[status] = "Cancelled" )
+		formatString: $#,0
+		displayFolder: 1 Sales
+		lineageTag: 0476ebe1-39f1-4673-bac2-402ce6e12bcb
+
+	/// Share of all orders that were cancelled.
+	measure 'Cancellation Rate %' =
+			DIVIDE (
+			    CALCULATE ( DISTINCTCOUNT ( orders_info[orderNumber] ), orders_info[status] = "Cancelled" ),
+			    DISTINCTCOUNT ( orders_info[orderNumber] )
+			)
+		formatString: 0.0%
+		displayFolder: 1 Sales
+		lineageTag: 995c95e1-130b-4627-89f0-8cb54e33b9b3
+
+	/// Cost of goods of valid (non-cancelled) orders.
+	measure Cost = CALCULATE ( SUM ( orders_info[totalCost] ), orders_info[status] <> "Cancelled" )
+		formatString: $#,0
+		displayFolder: 2 Profitability
+		lineageTag: c89f009a-527b-43af-b324-ddb5f4ff6d1d
+
+	/// Profit of valid (non-cancelled) orders.
+	measure Profit = CALCULATE ( SUM ( orders_info[totalProfit] ), orders_info[status] <> "Cancelled" )
+		formatString: $#,0
+		displayFolder: 2 Profitability
+		lineageTag: 0ccf000c-d978-4592-bf66-442f5d918204
+
+	/// Profitability: Profit divided by Revenue.
+	measure 'Profit Margin %' = DIVIDE ( [Profit], [Revenue] )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: 831520ec-6cf7-4c67-85e9-b090668574fc
+
+	/// Average profit per valid order.
+	measure 'Profit per Order' = DIVIDE ( [Profit], [Orders] )
+		formatString: $#,0
+		displayFolder: 2 Profitability
+		lineageTag: 0225f1b3-a7e4-444b-8587-9ba84229f7c9
+
+	/// Profit divided by Cost.
+	measure 'Markup %' = DIVIDE ( [Profit], [Cost] )
+		formatString: 0.0%
+		displayFolder: 2 Profitability
+		lineageTag: 416687b7-97c8-4eac-afaa-0b6a84980121
+
+	/// Revenue in the same period of the prior year.
+	measure 'Revenue PY' = CALCULATE ( [Revenue], SAMEPERIODLASTYEAR ( 'Dim Date'[Date] ) )
+		formatString: $#,0
+		displayFolder: 3 Time Intelligence
+		lineageTag: 4838ba92-6551-45b9-a0f3-e003b3748dee
+
+	/// Revenue change versus prior year; blank when there is no prior year.
+	measure 'Revenue YoY %' = DIVIDE ( [Revenue] - [Revenue PY], [Revenue PY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 3 Time Intelligence
+		lineageTag: e2f1e611-b7f6-4f44-b51f-e41ba3e167bd
+
+	/// Profit in the same period of the prior year.
+	measure 'Profit PY' = CALCULATE ( [Profit], SAMEPERIODLASTYEAR ( 'Dim Date'[Date] ) )
+		formatString: $#,0
+		displayFolder: 3 Time Intelligence
+		lineageTag: 968c4b6c-ba2c-4fef-abfe-50db100f6e8f
+
+	/// Profit change versus prior year; blank when there is no prior year.
+	measure 'Profit YoY %' = DIVIDE ( [Profit] - [Profit PY], [Profit PY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 3 Time Intelligence
+		lineageTag: c630b138-d7e6-486f-a4b3-670e68085ec1
+
+	/// Revenue year to date.
+	measure 'Revenue YTD' = CALCULATE ( [Revenue], DATESYTD ( 'Dim Date'[Date] ) )
+		formatString: $#,0
+		displayFolder: 3 Time Intelligence
+		lineageTag: 5fe8267b-06e9-46ac-83ef-567c828aad60
+
+	/// Revenue change versus the previous month.
+	measure 'Revenue MoM %' =
+			VAR Prev = CALCULATE ( [Revenue], DATEADD ( 'Dim Date'[Date], -1, MONTH ) )
+			RETURN DIVIDE ( [Revenue] - Prev, Prev )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 3 Time Intelligence
+		lineageTag: 49206036-617d-45be-b50c-181a8dbde211
+
+	/// Profit margin in the same period of the prior year.
+	measure 'Margin PY %' = CALCULATE ( [Profit Margin %], SAMEPERIODLASTYEAR ( 'Dim Date'[Date] ) )
+		formatString: 0.0%
+		displayFolder: 3 Time Intelligence
+		lineageTag: 7d25815d-a11a-4330-b7ac-91fe5031586b
+
+	/// Profit margin change versus prior year in percentage points; blank without a prior year.
+	measure 'Margin Change (pp)' = IF ( ISBLANK ( [Margin PY %] ), BLANK (), [Profit Margin %] - [Margin PY %] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: 3 Time Intelligence
+		lineageTag: 28575258-88c9-4462-980c-1fff9f5a9d2c
+
+	/// Non-cancelled orders that have a shipped date.
+	measure 'Shipped Orders' =
+			CALCULATE (
+			    DISTINCTCOUNT ( orders_info[orderNumber] ),
+			    orders_info[status] <> "Cancelled",
+			    NOT ISBLANK ( orders_info[shippedDate] )
+			)
+		formatString: #,0
+		displayFolder: 4 Delivery
+		lineageTag: 89287fca-3195-469c-9250-d54e01ca436f
+
+	/// Shipped orders delivered on or before the required date.
+	measure 'On-Time Orders' =
+			CALCULATE (
+			    DISTINCTCOUNT ( orders_info[orderNumber] ),
+			    orders_info[status] <> "Cancelled",
+			    FILTER (
+			        orders_info,
+			        NOT ISBLANK ( orders_info[shippedDate] )
+			            && orders_info[shippedDate] <= orders_info[requiredDate]
+			    )
+			)
+		formatString: #,0
+		displayFolder: 4 Delivery
+		lineageTag: 182af97c-d8c7-49c6-b0c4-660b135c3835
+
+	/// Shipped orders delivered after the required date.
+	measure 'Late Orders' =
+			CALCULATE (
+			    DISTINCTCOUNT ( orders_info[orderNumber] ),
+			    orders_info[status] <> "Cancelled",
+			    FILTER (
+			        orders_info,
+			        NOT ISBLANK ( orders_info[shippedDate] )
+			            && orders_info[shippedDate] > orders_info[requiredDate]
+			    )
+			)
+		formatString: #,0
+		displayFolder: 4 Delivery
+		lineageTag: ad8929de-1aa2-47c0-a12f-52ea122e37f3
+
+	/// On-time orders divided by shipped orders.
+	measure 'On-Time Delivery %' = DIVIDE ( [On-Time Orders], [Shipped Orders] )
+		formatString: 0.0%
+		displayFolder: 4 Delivery
+		lineageTag: f69e4e6c-ea36-4570-98eb-9851ba0e78b0
+
+	/// Late orders divided by shipped orders.
+	measure 'Late Delivery %' = DIVIDE ( [Late Orders], [Shipped Orders] )
+		formatString: 0.0%
+		displayFolder: 4 Delivery
+		lineageTag: 478e72f2-0b4b-4974-bdbf-c7bb3497d33d
+
+	/// Average days between required date and shipped date for late orders.
+	measure 'Avg Days Late' =
+			AVERAGEX (
+			    FILTER (
+			        orders_info,
+			        orders_info[status] <> "Cancelled"
+			            && NOT ISBLANK ( orders_info[shippedDate] )
+			            && orders_info[shippedDate] > orders_info[requiredDate]
+			    ),
+			    DATEDIFF ( orders_info[requiredDate], orders_info[shippedDate], DAY )
+			)
+		formatString: 0.0
+		displayFolder: 4 Delivery
+		lineageTag: b756fc4a-6480-4b75-bcc6-e3d56d8791fa
+
+	/// Average days between order date and shipped date.
+	measure 'Avg Days to Ship' =
+			AVERAGEX (
+			    FILTER ( orders_info, orders_info[status] <> "Cancelled" && NOT ISBLANK ( orders_info[shippedDate] ) ),
+			    DATEDIFF ( orders_info[orderDate], orders_info[shippedDate], DAY )
+			)
+		formatString: 0.0
+		displayFolder: 4 Delivery
+		lineageTag: d322718e-a4de-42a2-b067-573cda7b3c38
+
+	/// Revenue of orders shipped after the required date.
+	measure 'Revenue at Risk (Late)' =
+			CALCULATE (
+			    [Revenue],
+			    FILTER (
+			        orders_info,
+			        NOT ISBLANK ( orders_info[shippedDate] )
+			            && orders_info[shippedDate] > orders_info[requiredDate]
+			    )
+			)
+		formatString: $#,0
+		displayFolder: 4 Delivery
+		lineageTag: 225649f1-ab33-4f00-91e2-21f93c4bbbed
+
+	/// Orders still In Process, On Hold or Disputed.
+	measure 'Open Orders' =
+			CALCULATE (
+			    DISTINCTCOUNT ( orders_info[orderNumber] ),
+			    orders_info[status] IN { "In Process", "On Hold", "Disputed" }
+			)
+		formatString: #,0
+		displayFolder: 4 Delivery
+		lineageTag: d42e1c7b-ef65-4b67-90e4-322e67ccc246
+
+	/// On-time delivery target (assumption, confirm with the business).
+	measure 'On-Time Target %' = 0.95
+		formatString: 0.0%
+		displayFolder: 4 Delivery
+		lineageTag: eababc45-20b6-400f-9acf-9f59dd2ef467
+
+	/// Number of customers in the customer dimension.
+	measure 'Total Customers' = DISTINCTCOUNT ( 'classicmodels customers'[customerNumber] )
+		formatString: #,0
+		displayFolder: 5 Customers
+		lineageTag: 9d985781-ade8-43e7-84cc-043d2f081a2c
+
+	/// Customers with at least one valid order.
+	measure 'Active Customers' = CALCULATE ( DISTINCTCOUNT ( orders_info[customerNumber] ), orders_info[status] <> "Cancelled" )
+		formatString: #,0
+		displayFolder: 5 Customers
+		lineageTag: c226150e-8902-41d1-8979-a3f3c7f6f641
+
+	/// Revenue divided by active customers.
+	measure 'Revenue per Customer' = DIVIDE ( [Revenue], [Active Customers] )
+		formatString: $#,0
+		displayFolder: 5 Customers
+		lineageTag: 8da6677e-fa64-4551-81a8-07bf65e44474
+
+	/// Profit divided by active customers.
+	measure 'Profit per Customer' = DIVIDE ( [Profit], [Active Customers] )
+		formatString: $#,0
+		displayFolder: 5 Customers
+		lineageTag: 0947b526-3c49-4049-a7cf-f217ff03c409
+
+	/// Valid orders divided by active customers.
+	measure 'Orders per Customer' = DIVIDE ( [Orders], [Active Customers] )
+		formatString: 0.0
+		displayFolder: 5 Customers
+		lineageTag: ee3bfbf1-e2f1-43e9-9d74-78cd3f216389
+
+	/// Rank of the customer by revenue (dense).
+	measure 'Customer Revenue Rank' = RANKX ( ALL ( 'classicmodels customers'[customerName] ), [Revenue], , DESC, DENSE )
+		formatString: 0
+		displayFolder: 5 Customers
+		lineageTag: 0224a316-54df-4254-9481-5b0f18519a5a
+
+	/// Share of total revenue generated by the top 10 customers.
+	measure 'Top 10 Customers Revenue Share %' =
+			VAR Top10 =
+			    TOPN ( 10, ALL ( 'classicmodels customers'[customerNumber] ), [Revenue], DESC )
+			RETURN
+			    DIVIDE (
+			        CALCULATE ( [Revenue], KEEPFILTERS ( Top10 ) ),
+			        CALCULATE ( [Revenue], ALL ( 'classicmodels customers' ) )
+			    )
+		formatString: 0.0%
+		displayFolder: 5 Customers
+		lineageTag: dae76261-e340-4f95-865f-50ede6c1de22
+
+	/// Customers whose first order falls in the selected period.
+	measure 'New Customers' =
+			VAR Cur = VALUES ( 'classicmodels customers'[customerNumber] )
+			RETURN
+			COUNTROWS (
+			    FILTER (
+			        Cur,
+			        VAR FirstOrder =
+			            CALCULATE ( MIN ( orders_info[orderDate] ), ALL ( 'Dim Date' ) )
+			        RETURN FirstOrder >= MIN ( 'Dim Date'[Date] ) && FirstOrder <= MAX ( 'Dim Date'[Date] )
+			    )
+			)
+		formatString: #,0
+		displayFolder: 5 Customers
+		lineageTag: 1b5be9eb-3ae2-4b37-bde9-c3d3b032c588
+
+	/// Share of active customers with more than one order.
+	measure 'Repeat Customer %' =
+			DIVIDE (
+			    COUNTROWS ( FILTER ( VALUES ( 'classicmodels customers'[customerNumber] ), [Orders] > 1 ) ),
+			    [Active Customers]
+			)
+		formatString: 0.0%
+		displayFolder: 5 Customers
+		lineageTag: 87e9b433-7c8f-4887-9e2e-d5d690230090
+
+	/// Sum of all payments received.
+	measure 'Total Payments' = SUM ( 'classicmodels payments'[amount] )
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: cd2f9a59-788a-47fc-bcf6-fabef29285d4
+
+	/// Number of payments received.
+	measure 'Payment Count' = COUNTROWS ( 'classicmodels payments' )
+		formatString: #,0
+		displayFolder: 6 Credit
+		lineageTag: 63c6025f-85c2-467e-a669-69c228849aa3
+
+	/// Billed revenue minus payments received (positive = debt, negative = deposit).
+	measure 'Outstanding Balance' = [Revenue] - [Total Payments]
+		formatString: $#,0;-$#,0
+		displayFolder: 6 Credit
+		lineageTag: 9eddfd24-ff96-4d7f-9172-435ed38a9090
+
+	/// Revenue billed up to the selected end date.
+	measure 'Billed to Date' = CALCULATE ( [Revenue], FILTER ( ALL ( 'Dim Date' ), 'Dim Date'[Date] <= MAX ( 'Dim Date'[Date] ) ) )
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: 069844f4-e459-4533-be7c-c4d0aa6956b3
+
+	/// Payments received up to the selected end date.
+	measure 'Paid to Date' = CALCULATE ( [Total Payments], FILTER ( ALL ( 'Dim Date' ), 'Dim Date'[Date] <= MAX ( 'Dim Date'[Date] ) ) )
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: 30dc8d2d-2237-423a-b3fd-b8952355628a
+
+	/// Billed to date minus paid to date.
+	measure 'Outstanding Balance to Date' = [Billed to Date] - [Paid to Date]
+		formatString: $#,0;-$#,0
+		displayFolder: 6 Credit
+		lineageTag: da6aa6a6-ae42-4b22-a2b4-06623e17aea4
+
+	/// Customer balance when positive (customer owes money); blank otherwise.
+	measure 'Customer Debt' =
+			VAR Bal = [Outstanding Balance to Date]
+			RETURN IF ( Bal > 0, Bal )
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: 5db06691-df58-4bf2-bed9-5aff9faa49af
+
+	/// Customer credit balance when negative (customer prepaid or overpaid); blank otherwise.
+	measure 'Customer Deposit' =
+			VAR Bal = [Outstanding Balance to Date]
+			RETURN IF ( Bal < 0, -Bal )
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: e6ad537c-ece7-4cad-a0de-b9f4d700b753
+
+	/// Sum of customer debts, evaluated per customer.
+	measure 'Total Debt' = SUMX ( VALUES ( 'classicmodels customers'[customerNumber] ), COALESCE ( [Customer Debt], 0 ) )
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: 09664831-bb06-4175-99f5-7f907e94bac8
+
+	/// Sum of customer deposits, evaluated per customer.
+	measure 'Total Deposits' = SUMX ( VALUES ( 'classicmodels customers'[customerNumber] ), COALESCE ( [Customer Deposit], 0 ) )
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: 911dffb0-9a1e-4336-bc9a-a7325d864b17
+
+	/// Customers with an outstanding balance above zero.
+	measure 'Customers in Debt' =
+			COUNTROWS (
+			    FILTER ( VALUES ( 'classicmodels customers'[customerNumber] ), [Outstanding Balance to Date] > 0 )
+			)
+		formatString: #,0
+		displayFolder: 6 Credit
+		lineageTag: 9e35a2b4-4cf0-4265-8b58-3e3720d378cf
+
+	/// Customers with an outstanding balance below zero.
+	measure 'Customers with Deposit' =
+			COUNTROWS (
+			    FILTER ( VALUES ( 'classicmodels customers'[customerNumber] ), [Outstanding Balance to Date] < 0 )
+			)
+		formatString: #,0
+		displayFolder: 6 Credit
+		lineageTag: edb98260-6a12-48c0-a0fd-abcd755fe881
+
+	/// Customers with an outstanding balance of exactly zero.
+	measure 'Customers Settled' =
+			COUNTROWS (
+			    FILTER ( VALUES ( 'classicmodels customers'[customerNumber] ), [Outstanding Balance to Date] = 0 )
+			)
+		formatString: #,0
+		displayFolder: 6 Credit
+		lineageTag: 1538addd-db90-4bed-8f74-d4d732d90cc7
+
+	/// Share of customers in debt.
+	measure 'Customers in Debt %' = DIVIDE ( [Customers in Debt], [Total Customers] )
+		formatString: 0.0%
+		displayFolder: 6 Credit
+		lineageTag: 2647572d-9d04-4902-8e11-f1c948aadfd3
+
+	/// Payments received divided by revenue billed.
+	measure 'Collection Rate %' = DIVIDE ( [Paid to Date], [Billed to Date] )
+		formatString: 0.0%
+		displayFolder: 6 Credit
+		lineageTag: 97ac9b65-61ac-44fb-8d47-e52ee336647a
+
+	/// Text status of the balance: In Debt, Deposit or Settled.
+	measure 'Balance Status' =
+			VAR Bal = [Outstanding Balance to Date]
+			RETURN
+			    SWITCH ( TRUE (), Bal > 0, "In Debt", Bal < 0, "Deposit", "Settled" )
+		displayFolder: 6 Credit
+		lineageTag: 68f56ccc-0f5e-46f2-a095-3c3fb2ab5615
+
+	/// Sum of customer credit limits.
+	measure 'Credit Limit' = SUM ( 'classicmodels customers'[creditLimit] )
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: a66895cc-155a-433c-9874-8fbc3a7a6732
+
+	/// Credit currently used (total debt).
+	measure 'Credit Used' = [Total Debt]
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: 2adb8e8d-3fd1-434c-a93c-85f81a42bcf5
+
+	/// Credit limit minus credit used.
+	measure 'Credit Available' = [Credit Limit] - [Credit Used]
+		formatString: $#,0;-$#,0
+		displayFolder: 6 Credit
+		lineageTag: cc1f6316-7dda-480d-bfb1-176bd633a8a5
+
+	/// Credit used divided by credit limit.
+	measure 'Credit Utilization %' = DIVIDE ( [Credit Used], [Credit Limit] )
+		formatString: 0.0%
+		displayFolder: 6 Credit
+		lineageTag: 3dd05e6d-b487-444d-8921-f442d2ca1814
+
+	/// Customers whose debt exceeds their credit limit.
+	measure 'Customers Over Limit' =
+			COUNTROWS (
+			    FILTER (
+			        VALUES ( 'classicmodels customers'[customerNumber] ),
+			        [Customer Debt] > [Credit Limit]
+			    )
+			)
+		formatString: #,0
+		displayFolder: 6 Credit
+		lineageTag: fad0aeb0-6949-41a1-89f3-81cc6445c176
+
+	/// Total amount of debt above credit limits.
+	measure 'Over-Limit Exposure' =
+			SUMX (
+			    VALUES ( 'classicmodels customers'[customerNumber] ),
+			    VAR Lim = [Credit Limit]
+			    VAR Debt = COALESCE ( [Customer Debt], 0 )
+			    RETURN MAX ( Debt - Lim, 0 )
+			)
+		formatString: $#,0
+		displayFolder: 6 Credit
+		lineageTag: bc69362e-2322-45da-8afb-163750c8fa2b
+
+	/// Credit utilization band: Low, Medium, High, Over Limit or No Limit.
+	measure 'Utilization Band' =
+			VAR U = [Credit Utilization %]
+			RETURN
+			    SWITCH ( TRUE (), ISBLANK ( U ), "No Limit", U >= 1, "Over Limit", U >= 0.8, "High (80-100%)", U >= 0.5, "Medium (50-80%)", "Low (<50%)" )
+		displayFolder: 6 Credit
+		lineageTag: 0b04241c-651e-4240-8988-629f54fa1dc7
+
+	/// Hex color for conditional formatting of credit utilization.
+	measure 'Utilization Color' =
+			VAR U = [Credit Utilization %]
+			RETURN
+			    SWITCH ( TRUE (), U >= 1, "#FF5C5C", U >= 0.8, "#FFB020", "#CFF53A" )
+		displayFolder: 6 Credit
+		lineageTag: c2c7a738-2510-4894-b7e5-e2939ab06a6b
+
+	/// Hex color for the revenue YoY delta: lime if growing, red if shrinking.
+	measure 'Color Revenue YoY' = IF ( [Revenue YoY %] < 0, "#FF5C5C", "#CFF53A" )
+		displayFolder: 9 Colors
+		lineageTag: b4991dae-1dbe-44b1-9316-2b8e7b7e4a1b
+
+	/// Hex color for the profit YoY delta.
+	measure 'Color Profit YoY' = IF ( [Profit YoY %] < 0, "#FF5C5C", "#CFF53A" )
+		displayFolder: 9 Colors
+		lineageTag: 66175cd3-ffe0-4200-9a48-25ebdd5dabcb
+
+	/// Hex color for the margin change in percentage points.
+	measure 'Color Margin Change' = IF ( [Margin Change (pp)] < 0, "#FF5C5C", "#CFF53A" )
+		displayFolder: 9 Colors
+		lineageTag: 821bf4b6-4c0f-4166-9114-538d48e50e2a
+
+	/// Hex color for on-time delivery vs target: lime >= 95%, amber 90-95%, red below 90%.
+	measure 'Color On-Time' =
+			VAR P = [On-Time Delivery %]
+			RETURN
+			    SWITCH ( TRUE (), P >= 0.95, "#CFF53A", P >= 0.9, "#FFB020", "#FF5C5C" )
+		displayFolder: 9 Colors
+		lineageTag: 262e1483-7b49-4b4d-90a4-c6539a8280fc
+
+	/// Hex color for the customer balance: red when in debt, lime when in deposit.
+	measure 'Color Balance' = IF ( [Customer Debt] > 0, "#FF5C5C", "#CFF53A" )
+		displayFolder: 9 Colors
+		lineageTag: 51ecb7fb-a70d-474a-8507-10110d206860
+
+	/// Share of the selected revenue.
+	measure 'Revenue Share %' = DIVIDE ( [Revenue], CALCULATE ( [Revenue], ALLSELECTED () ) )
+		formatString: 0.0%
+		displayFolder: 7 Dimensions
+		lineageTag: af987b33-86de-4742-b033-f2366174108c
+
+	/// Share of the selected profit.
+	measure 'Profit Share %' = DIVIDE ( [Profit], CALCULATE ( [Profit], ALLSELECTED () ) )
+		formatString: 0.0%
+		displayFolder: 7 Dimensions
+		lineageTag: 78ecef71-7638-4d54-a103-ca1cd825092e
+
+	/// Revenue divided by the number of sales reps.
+	measure 'Revenue per Sales Rep' = DIVIDE ( [Revenue], DISTINCTCOUNT ( orders_info[salesRepEmployeeNumber] ) )
+		formatString: $#,0
+		displayFolder: 7 Dimensions
+		lineageTag: 548fa9f2-f858-4a07-acf8-ec3901570eb4
+
+	/// Country with the highest revenue in the current selection.
+	measure 'Top Country by Revenue' =
+			VAR T = TOPN ( 1, ALLSELECTED ( 'classicmodels customers'[country] ), [Revenue], DESC )
+			RETURN CONCATENATEX ( T, 'classicmodels customers'[country] )
+		displayFolder: 8 Insights
+		lineageTag: 934df464-30e2-4ace-b115-f53a58b8cc31
+
+	/// Customer with the highest revenue in the current selection.
+	measure 'Top Customer by Revenue' =
+			VAR T = TOPN ( 1, ALLSELECTED ( 'classicmodels customers'[customerName] ), [Revenue], DESC )
+			RETURN CONCATENATEX ( T, 'classicmodels customers'[customerName] )
+		displayFolder: 8 Insights
+		lineageTag: 4c03369e-48b9-4e71-b22d-660ba94a79fe
+
+	/// Customer with the highest debt in the current selection.
+	measure 'Highest Debt Customer' =
+			VAR T = TOPN ( 1, ALLSELECTED ( 'classicmodels customers'[customerName] ), [Customer Debt], DESC )
+			RETURN CONCATENATEX ( T, 'classicmodels customers'[customerName] )
+		displayFolder: 8 Insights
+		lineageTag: 35881f6a-e375-4eb2-966e-ce4eb73d4789
+
+	/// Dynamic revenue headline for the Insights page.
+	measure 'Insight - Revenue Headline' =
+			"Revenue " & FORMAT ( [Revenue], "$#,0" )
+			    & IF ( ISBLANK ( [Revenue YoY %] ), "", " (" & FORMAT ( [Revenue YoY %], "+0.0%;-0.0%" ) & " vs prior year)" )
+			    & ", led by " & [Top Country by Revenue]
+		displayFolder: 8 Insights
+		lineageTag: 16caec92-200e-46e4-b4e3-1f444fb41a44
+
+	/// Dynamic delivery headline for the Insights page.
+	measure 'Insight - Delivery Headline' =
+			FORMAT ( [On-Time Delivery %], "0.0%" ) & " of shipped orders were on time; "
+			    & FORMAT ( [Late Orders], "#,0" ) & " late with " & FORMAT ( [Avg Days Late], "0.0" ) & " days average delay"
+		displayFolder: 8 Insights
+		lineageTag: e064abc5-536c-43c6-a72b-538a8680f986
+
+	/// Dynamic credit headline for the Insights page.
+	measure 'Insight - Credit Headline' =
+			FORMAT ( [Customers in Debt], "#,0" ) & " customers owe " & FORMAT ( [Total Debt], "$#,0" )
+			    & " (" & FORMAT ( [Credit Utilization %], "0.0%" ) & " of total credit limit used)"
+		displayFolder: 8 Insights
+		lineageTag: fe35b41d-4962-4762-9f64-5d28e23ea150
+
+	column Dummy
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3c6f0a10-1111-4000-8000-00000000a002
+		summarizeBy: none
+		sourceColumn: [Dummy]
+
+	partition _Measures = calculated
+		mode: import
+		source = ROW ( "Dummy", 1 )
+
+	annotation PBI_ResultType = Table
+
